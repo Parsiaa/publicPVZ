@@ -9,7 +9,7 @@ public abstract class Entity {
     protected int health;
 
     public void takeDamage(int amount){
-        //TODO
+        health = Math.min(0, health - amount);
     }
     public boolean isDead(){
         return health > 0;
