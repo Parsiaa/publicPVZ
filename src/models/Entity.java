@@ -2,8 +2,46 @@ package models;
 
 public abstract class Entity {
     protected double x;
-    protected int y;
+
+
+
+    protected double y;
     protected int health;
 
-    public
+    public void takeDamage(int amount){
+        //TODO
+    }
+    public boolean isDead(){
+        return health > 0;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
+    public int getHealth() {
+        return health;
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
+    }
+
+
+
+
+
+
 }
