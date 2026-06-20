@@ -26,11 +26,12 @@ public class User {
     private int notDailyQuestsCompleted;
     private int highestMeowPointScore;
     private List<Quest> activeQuests;
+
     public User(String username, String password, String passwordHash, String passwordConfirm,
-            String nickname, String email, String gender, int coins, int gems,
-            String securityQuestion, String securityAnswer, int storedStartingPlantFoods, int highestChapter,
-            int highestLevel, int miniGamesCompleted, int dailyQuestsCompleted, int notDailyQuestsCompleted,
-            int highestMeowPointScore, List<Quest> activeQuests) {
+                String nickname, String email, String gender, int coins, int gems,
+                String securityQuestion, String securityAnswer, int storedStartingPlantFoods, int highestChapter,
+                int highestLevel, int miniGamesCompleted, int dailyQuestsCompleted, int notDailyQuestsCompleted,
+                int highestMeowPointScore, List<Quest> activeQuests) {
         this.username = username;
         this.password = password;
         this.passwordHash = passwordHash;
@@ -51,15 +52,16 @@ public class User {
         this.highestMeowPointScore = highestMeowPointScore;
         this.activeQuests = activeQuests;
     }
+
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
-    
+
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-    
+
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
-    
+
     public String getPasswordConfirm() { return passwordConfirm; }
     public void setPasswordConfirm(String passwordConfirm) { this.passwordConfirm = passwordConfirm;}
 
@@ -68,43 +70,43 @@ public class User {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    
+
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
-    
+
     public int getCoins() { return coins; }
     public void setCoins(int coins) { this.coins = coins; }
 
     public int getGems() { return gems; }
     public void setGems(int gems) { this.gems = gems; }
-    
+
     public String getSecurityQuestion() { return securityQuestion; }
     public void setSecurityQuestion(String securityQuestion) { this.securityQuestion = securityQuestion; }
-    
+
     public String getSecurityAnswer() { return securityAnswer; }
     public void setSecurityAnswer(String securityAnswer) { this.securityAnswer = securityAnswer; }
-    
+
     public int getStoredStartingPlantFoods() { return storedStartingPlantFoods; }
     public void setStoredStartingPlantFoods(int storedStartingPlantFoods) { this.storedStartingPlantFoods = storedStartingPlantFoods; }
-    
+
     public int getHighestChapter() { return highestChapter; }
     public void setHighestChapter(int highestChapter) { this.highestChapter = highestChapter; }
-    
+
     public int getHighestLevel() { return highestLevel; }
     public void setHighestLevel(int highestLevel) { this.highestLevel = highestLevel; }
-    
+
     public int getMiniGamesCompleted() { return miniGamesCompleted; }
     public void setMiniGamesCompleted(int miniGamesCompleted) { this.miniGamesCompleted = miniGamesCompleted; }
-    
+
     public int getDailyQuestsCompleted() { return dailyQuestsCompleted; }
     public void setDailyQuestsCompleted(int dailyQuestsCompleted) { this.dailyQuestsCompleted = dailyQuestsCompleted; }
-    
+
     public int getNotDailyQuestsCompleted() { return notDailyQuestsCompleted; }
     public void setNotDailyQuestsCompleted(int notDailyQuestsCompleted) { this.notDailyQuestsCompleted = notDailyQuestsCompleted; }
-    
+
     public int getHighestMeowPointScore() { return highestMeowPointScore; }
     public void setHighestMeowPointScore(int highestMeowPointScore) { this.highestMeowPointScore = highestMeowPointScore; }
-    
+
     public List<Quest> getActiveQuests() { return activeQuests; }
     public void setActiveQuests(List<Quest> activeQuests) { this.activeQuests = activeQuests; }
 
@@ -121,16 +123,16 @@ public class User {
         //     errors.add("Username must be at least 3 characters long.");
         // }
 
-        return new Result(errors, errors.isEmpty());
+        return new Result(String.join("\n", errors), errors.isEmpty());
     }
-    
+
     public Result verifyPassword() {
         List<String> errors = new ArrayList<>();
 
         if (password == null) password = "";
 
         if (password.length() < 8) {
-            errors.add("Password must be at least 8 characters long."); 
+            errors.add("Password must be at least 8 characters long.");
         }
 
         if (!Pattern.compile("[a-z]").matcher(password).find()) {
@@ -154,7 +156,7 @@ public class User {
             errors.add("Passwords do not match.");
         }
 
-        return new Result(errors, errors.isEmpty());
+        return new Result(String.join("\n", errors), errors.isEmpty());
     }
 
     public Result verifyNickname() {
@@ -168,7 +170,7 @@ public class User {
             errors.add("Nickname must be at most 30 characters long.");
         }
 
-        return new Result(errors, errors.isEmpty());
+        return new Result(String.join("\n", errors), errors.isEmpty());
     }
 
     public Result verifyEmail() {
@@ -181,7 +183,7 @@ public class User {
         }
         if (atCount != 1) {
             errors.add("Email must contain exactly one '@' symbol.");
-            return new Result(errors, errors.isEmpty());
+            return new Result(String.join("\n", errors), errors.isEmpty());
         }
 
         String[] parts = email.split("@", -1);
@@ -217,7 +219,7 @@ public class User {
                 if (domainPart.contains("..")) {
                     errors.add("Email domain cannot contain consecutive dots (..).");
                 }
-                
+
                 int lastDotIndex = domainPart.lastIndexOf('.');
                 String extension = domainPart.substring(lastDotIndex + 1);
                 if (extension.length() < 2 || !extension.matches("^[a-zA-Z]+$")) {
@@ -226,6 +228,6 @@ public class User {
             }
         }
 
-        return new Result(errors, errors.isEmpty());
+        return new Result(String.join("\n", errors), errors.isEmpty());
     }
 }
