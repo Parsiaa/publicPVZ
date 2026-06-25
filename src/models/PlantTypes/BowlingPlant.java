@@ -9,7 +9,7 @@ public class BowlingPlant extends Plant {
     private boolean isGiant;
     private boolean isExplosive;
 
-    
+
     @Override
     public void act(MatchState state) {
         //TODO

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import utils.Result;
+import java.util.Set;
+import java.util.HashSet;
 
 public class User {
     private String username;
@@ -26,6 +28,8 @@ public class User {
     private int notDailyQuestsCompleted;
     private int highestMeowPointScore;
     private List<Quest> activeQuests;
+    private Set<String> boostedPlants = new HashSet<>();
+
 
     public User(String username, String password, String passwordHash, String passwordConfirm,
                 String nickname, String email, String gender, int coins, int gems,
@@ -233,5 +237,15 @@ public class User {
         }
 
         return new Result(String.join("\n", errors), errors.isEmpty());
+    }
+
+    public boolean hasBoostFor(String plantName) {
+        return boostedPlants.contains(plantName);
+    }
+    public void addBoostFor(String plantName) {
+        boostedPlants.add(plantName);
+    }
+    public void consumeBoostFor(String plantName) {
+        boostedPlants.remove(plantName);
     }
 }
