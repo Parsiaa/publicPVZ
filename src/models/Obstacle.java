@@ -25,6 +25,7 @@ public abstract class Obstacle extends Entity {
         this.currentHealth = currentHealth;
     }
 
+    
     public void dropLoot(MatchState state) {
         //TODO
     }
