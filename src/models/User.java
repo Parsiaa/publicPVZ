@@ -27,6 +27,7 @@ public class User {
     private int dailyQuestsCompleted;
     private int notDailyQuestsCompleted;
     private int highestMeowPointScore;
+    private boolean stayLoggedIn;
     private List<Quest> activeQuests;
     private Set<String> boostedPlants = new HashSet<>();
 
@@ -35,7 +36,7 @@ public class User {
                 String nickname, String email, String gender, int coins, int gems,
                 String securityQuestion, String securityAnswer, int storedStartingPlantFoods, int highestChapter,
                 int highestLevel, int miniGamesCompleted, int dailyQuestsCompleted, int notDailyQuestsCompleted,
-                int highestMeowPointScore, List<Quest> activeQuests) {
+                int highestMeowPointScore, boolean stayLoggedIn, List<Quest> activeQuests) {
         this.username = username;
         this.password = password;
         this.passwordHash = passwordHash;
@@ -54,6 +55,7 @@ public class User {
         this.dailyQuestsCompleted = dailyQuestsCompleted;
         this.notDailyQuestsCompleted = notDailyQuestsCompleted;
         this.highestMeowPointScore = highestMeowPointScore;
+        this.stayLoggedIn = stayLoggedIn;
         this.activeQuests = activeQuests;
     }
     public User(String username, String password) {
@@ -114,6 +116,9 @@ public class User {
 
     public int getHighestMeowPointScore() { return highestMeowPointScore; }
     public void setHighestMeowPointScore(int highestMeowPointScore) { this.highestMeowPointScore = highestMeowPointScore; }
+
+    public boolean getStayLoggedIn() { return stayLoggedIn; }
+    public void setStayLoggedIn(boolean stayLoggedIn) { this.stayLoggedIn = stayLoggedIn; }
 
     public List<Quest> getActiveQuests() { return activeQuests; }
     public void setActiveQuests(List<Quest> activeQuests) { this.activeQuests = activeQuests; }

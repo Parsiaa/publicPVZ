@@ -85,7 +85,15 @@ public class UserApp {
         saveUsers(); // Immediately save to the JSON file
     }
 
+    public Map<String, User> getUser() {
+        return this.users;
+    }
+
     public static Menu getCurrentMenu() {
         return currentMenu;
+    }
+
+    public void setLoggedInUser(User user) {
+        this.loggedInUser = user;
     }
 }

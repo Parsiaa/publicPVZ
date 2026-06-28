@@ -19,7 +19,7 @@ public class SignUpMenuController {
         }
         User newUser = new User(
                 username, password, password, passwordConfirm, nickname, email, "Not Specified",
-                0, 0, securityQuestion, securityAnswer, 0, 0, 0, 0, 0, 0, 0, new ArrayList<>()
+                0, 0, securityQuestion, securityAnswer, 0, 0, 0, 0, 0, 0, 0, false, new ArrayList<>()
         );
         Result usernameResult = newUser.verifyUsername();
         if (!usernameResult.isSuccess()) {
