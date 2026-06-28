@@ -5,13 +5,13 @@ import models.User;
 import java.util.HashMap;
 import java.util.Map;
 
-public class userApp {
+public class UserApp {
     private Map<String, User> users;
     private User loggedInUser;
 
     private static final String USERS_FILE_PATH = "data/users.json";
 
-    public userApp() {
+    public UserApp() {
         this.users = new HashMap<>();
         this.loggedInUser = null;
         loadUsers();
@@ -77,5 +77,9 @@ public class userApp {
             e.printStackTrace();
         }
         */
+    }
+    public void addUser(User newUser) {
+        users.put(newUser.getUsername(), newUser);
+        saveUsers(); // Immediately save to the JSON file
     }
 }
