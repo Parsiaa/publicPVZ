@@ -1,5 +1,6 @@
 package utils;
 
+import models.Enums.Menu;
 import models.User;
 
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.Map;
 public class UserApp {
     private Map<String, User> users;
     private User loggedInUser;
+    private static Menu currentMenu;
 
     private static final String USERS_FILE_PATH = "data/users.json";
 
@@ -81,5 +83,9 @@ public class UserApp {
     public void addUser(User newUser) {
         users.put(newUser.getUsername(), newUser);
         saveUsers(); // Immediately save to the JSON file
+    }
+
+    public static Menu getCurrentMenu() {
+        return currentMenu;
     }
 }

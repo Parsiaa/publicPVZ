@@ -2,8 +2,8 @@ package views;
 
 import utils.UserApp;
 
-import java.awt.*;
 import java.util.Scanner;
+import models.Enums.Menu;
 
 public class AppView {
     public static  void run() {
@@ -11,6 +11,6 @@ public class AppView {
         do {
             UserApp.getCurrentMenu().checkCommand(scanner);
 
-        } while (App.getCurrentMenu() != Menu.Exit);
+        } while (UserApp.getCurrentMenu() != Menu.Exit);
     }
 }
