@@ -6,7 +6,6 @@ public class Sun {
     private SunType type;
     private int amount;
     private boolean isFalling;
-    
 
     public Sun(SunType type, int amount, boolean isFalling) {
         this.type = type;
@@ -15,11 +14,16 @@ public class Sun {
     }
 
     public void fall() {
-        //TODO
+        this.isFalling = false;
+        if (this.type == SunType.RADIOACTIVE) {
+            this.type = SunType.NORMAL;
+            this.amount = 25;
+        }
     }
 
     public void explode() {
-        //TODO
+        this.amount = 0;
+        this.isFalling = false;
     }
 
     public SunType getType() { return type; }
@@ -27,7 +31,7 @@ public class Sun {
 
     public int getAmount() { return amount; }
     public void setAmount(int amount) { this.amount = amount; }
-    
+
     public boolean isFalling() { return isFalling; }
     public void setFalling(boolean isFalling) { this.isFalling = isFalling; }
 }

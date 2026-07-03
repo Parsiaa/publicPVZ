@@ -2,17 +2,15 @@ package models;
 
 public abstract class Entity {
     protected double x;
-
-
-
     protected double y;
     protected int health;
 
-    public void takeDamage(int amount){
-        health = Math.min(0, health - amount);
+    public void takeDamage(int amount) {
+        health = Math.max(0, health - amount);
     }
-    public boolean isDead(){
-        return health > 0;
+
+    public boolean isDead() {
+        return health <= 0;
     }
 
     public double getX() {
@@ -38,10 +36,4 @@ public abstract class Entity {
     public void setHealth(int health) {
         this.health = health;
     }
-
-
-
-
-
-
 }
