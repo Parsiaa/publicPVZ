@@ -18,22 +18,20 @@ public class MatchState {
     private int uncollectedSuns;
     private int plantFoods;
 
-    // --- Loot Collected During Match ---
     private int lootedCoins;
     private int lootedGems;
     private int lootedPots;
 
-    // --- Special Rules & Trackers (From the Document) ---
     private boolean isNightTime;
     private List<LevelRule> activeRules;
     private int lostPlantsCount;
-    private boolean isPlayingAsZombie; // True for "I, Zombie" minigame
-    private int targetMatchCount;      // For "Beghouled" minigame
+    private boolean isPlayingAsZombie;
+    private int targetMatchCount;
 
 
     public MatchState(User user, int initialSun, int difficultyLevel) {
         this.user = user;
-        this.map = new Map(); // Assuming Map has a default 5x9 constructor
+        this.map = new Map();
         this.seedPackets = new ArrayList<>();
         this.waves = new ArrayList<>();
         this.activeRules = new ArrayList<>();
@@ -93,7 +91,7 @@ public class MatchState {
             currentWave = waves.get(nextIndex);
             return currentWave;
         }
-        return null; // No more waves
+        return null;
     }
     public User getUser() { return user; }
 
@@ -103,13 +101,13 @@ public class MatchState {
     public void setSunAmount(int sunAmount) { this.sunAmount = sunAmount; }
 
     public int getCurrentTick() { return currentTick; }
-    public void incrementTick() { this.currentTick++; } // Often safer than a raw setter
+    public void incrementTick() { this.currentTick++; }
 
     public int getUncollectedSuns() { return uncollectedSuns; }
     public void setUncollectedSuns(int uncollectedSuns) { this.uncollectedSuns = uncollectedSuns; }
 
     public int getPlantFoods() { return plantFoods; }
-    public void addPlantFood() { this.plantFoods = Math.min(this.plantFoods + 1, 3); } // Max 3 capacity usually
+    public void addPlantFood() { this.plantFoods = Math.min(this.plantFoods + 1, 3); }
 
     public List<SeedPacket> getSeedPackets() { return seedPackets; }
     public void setSeedPackets(List<SeedPacket> seedPackets) { this.seedPackets = seedPackets; }
