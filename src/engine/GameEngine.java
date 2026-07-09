@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.Random;
 import models.MatchState;
 import models.Plant;
+import models.SeedPacket;
 import models.Sun;
+import models.Tile;
 import models.Zombie;
 import models.Enums.DamageType;
 import models.Enums.SunType;
+import models.PlantTypes.SunProducer;
 
 // Core match orchestrator. Owns the tick loop and the mechanics that run every
 // tick. Built incrementally, section by section, following the design doc.
@@ -50,6 +53,26 @@ public class GameEngine {
     private void tick() {
         state.incrementTick();
         updateSunfall();
+        updateSeedPackets();
+        updatePlants();
+    }
+
+    // Seed-packet recharge: cooldowns are tracked in seconds and tick down by
+    // 0.1s (one tick) at a time.
+    private void updateSeedPackets() {
+        for (SeedPacket packet : state.getSeedPackets()) {
+            if (packet.getCurrentCooldown() > 0) {
+                packet.setCurrentCooldown(Math.max(0, packet.getCurrentCooldown() - 1.0 / TICKS_PER_SECOND));
+            }
+        }
+    }
+
+    private void updatePlants() {
+        for (Plant plant : new ArrayList<>(state.getMap().getAllPlants())) {
+            if (!plant.isDead()) {
+                plant.act(state);
+            }
+        }
     }
 
     // --- Sun from the sky -------------------------------------------------
@@ -107,9 +130,11 @@ public class GameEngine {
                 + (col + 1) + ", " + (row + 1) + ")");
     }
 
-    // Collects a sky sun at the given 1-indexed (x=column, y=row) tile.
-    // Returns the amount of sun added to the bank, or -1 if there was no sun there.
-    public int collectSkySunAt(int x, int y) {
+    // Collects a sun at the given 1-indexed (x=column, y=row) tile: either a sky
+    // sun resting on / falling to the tile, or a sun waiting on a sun-producer
+    // plant there. Returns the amount added to the bank, 0 if a radioactive sun
+    // exploded, or -1 if there was nothing to collect.
+    public int collectSunAt(int x, int y) {
         int col = x - 1;
         int row = y - 1;
         for (Iterator<FallingSun> it = fallingSuns.iterator(); it.hasNext();) {
@@ -124,6 +149,19 @@ public class GameEngine {
                 state.addSun(amount);
                 it.remove();
                 return amount;
+            }
+        }
+        Tile tile = state.getMap().getTile(row, col);
+        if (tile != null) {
+            for (Plant plant : tile.getPlants()) {
+                if (plant instanceof SunProducer) {
+                    SunProducer producer = (SunProducer) plant;
+                    if (producer.hasPendingSun()) {
+                        int before = state.getSunAmount();
+                        producer.collectSun(state);
+                        return state.getSunAmount() - before;
+                    }
+                }
             }
         }
         return -1;
