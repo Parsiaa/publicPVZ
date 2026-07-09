@@ -1,5 +1,6 @@
 package controllers;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -113,6 +114,10 @@ public class CollectionMenuController {
 
     public boolean isPlantUnlocked(String plantName) {
         return unlockedFor(userApp.getLoggedInUser()).contains(properName(ALL_PLANTS, plantName));
+    }
+
+    public List<String> getUnlockedPlants(User user) {
+        return new ArrayList<>(unlockedFor(user));
     }
 
     public boolean plantExists(String plantName) {
