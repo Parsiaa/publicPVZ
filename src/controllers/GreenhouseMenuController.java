@@ -14,8 +14,6 @@ public class GreenhouseMenuController {
     private CollectionMenuController collectionController;
     private java.util.Map<String, Pot[][]> potsByUser;
 
-    // Greenhouse layout per the doc: 20 pots on a 4-row x 5-column grid.
-    // Coordinates are (x, y) with x (column) in 1..5 and y (row) in 1..4.
     private static final int ROWS = 4;
     private static final int COLUMNS = 5;
     private static final int MARIGOLD_REWARD_COINS = 500;
@@ -126,7 +124,6 @@ public class GreenhouseMenuController {
         return new Result("Growth accelerated for " + cost + " gems. The plant is ready to harvest.", true);
     }
 
-    // Unlocks the next locked pot. Called when a Pot is bought from the shop.
     public Result unlockNextPot(User user) {
         Pot[][] pots = potsFor(user);
         for (int y = 1; y <= ROWS; y++) {
@@ -178,7 +175,7 @@ public class GreenhouseMenuController {
             for (int y = 0; y < ROWS; y++) {
                 for (int x = 0; x < COLUMNS; x++) {
                     Pot pot = new Pot();
-                    // Row 1 (y == 1) starts unlocked; rows 2..4 start locked.
+
                     if (y == 0) {
                         pot.setUnlocked(true);
                     }

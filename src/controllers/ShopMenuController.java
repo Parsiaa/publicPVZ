@@ -1,9 +1,7 @@
 package controllers;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import models.User;
 import utils.Result;
 import utils.UserApp;
@@ -13,13 +11,10 @@ public class ShopMenuController {
     private GreenhouseMenuController greenhouseController;
     private CollectionMenuController collectionController;
 
-    // In-memory seed-packet inventory (username -> plant -> packet count).
-    private java.util.Map<String, java.util.Map<String, Integer>> seedPacketsByUser;
-    // Tracks the last day each user redeemed the daily offer, so it is buyable once per day.
-    private java.util.Map<String, LocalDate> dailyPurchasedByUser;
+    private Map<String, java.util.Map<String, Integer>> seedPacketsByUser;
+    private Map<String, LocalDate> dailyPurchasedByUser;
     private LocalDate dailyOfferDate;
 
-    // Item ids used by "shop buy -i <item_id>".
     private static final int ITEM_POT = 1;
     private static final int ITEM_PLANT_FOOD = 2;
     private static final int ITEM_RANDOM_PACKET = 3;
@@ -27,7 +22,6 @@ public class ShopMenuController {
     private static final int ITEM_CURRENCY_CONVERSION = 5;
     private static final int ITEM_DAILY_OFFER = 6;
 
-    // Prices and quantities per the doc's shop table.
     private static final int POT_COST_COINS = 2000;
     private static final int PLANT_FOOD_COST_GEMS = 3;
     private static final int MAX_PLANT_FOOD = 3;
@@ -246,7 +240,6 @@ public class ShopMenuController {
         return dailyOfferDate.equals(dailyPurchasedByUser.get(user.getUsername()));
     }
 
-    // Deterministic per-day pick from the user's unlocked plants.
     private String dailyOfferPlant(User user) {
         List<String> unlocked = collectionController.getUnlockedPlants(user);
         if (unlocked.isEmpty()) {
