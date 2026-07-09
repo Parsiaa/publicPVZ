@@ -6,7 +6,7 @@ import java.util.List;
 
 public class MatchState {
     private User user;
-    private Map map; // Note: Ensure this refers to your custom models.Map, not java.util.Map!
+    private Map map;
     private List<SeedPacket> seedPackets;
 
     private List<Wave> waves;
