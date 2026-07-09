@@ -1,7 +1,6 @@
 package controllers;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import models.Pot;
 import models.User;
 import models.Enums.Menu;
@@ -12,7 +11,7 @@ public class GreenhouseMenuController {
     private UserApp userApp;
     private MenuRouter router;
     private CollectionMenuController collectionController;
-    private java.util.Map<String, Pot[][]> potsByUser;
+    private Map<String, Pot[][]> potsByUser;
 
     private static final int ROWS = 4;
     private static final int COLUMNS = 5;
