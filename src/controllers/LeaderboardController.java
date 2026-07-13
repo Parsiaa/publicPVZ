@@ -54,3 +54,4 @@ public class LeaderboardController {
         currentSort = ascending ? c : c.reversed();
     }
 }
+

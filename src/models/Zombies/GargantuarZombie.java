@@ -7,10 +7,11 @@ import models.Enums.DamageType;
 
 public class GargantuarZombie extends Zombie {
     private boolean hasThrowingImp = true;
+    private boolean pendingImpThrow;
 
     @Override
     public void move(MatchState state) {
-        if (currentHealth <= 0) {
+        if (currentHealth <= 0 || isImmobilized()) {
             return;
         }
         Plant front = state.getMap().getFrontPlantForZombie((int) y, x);
@@ -24,10 +25,19 @@ public class GargantuarZombie extends Zombie {
         state.getMap().moveZombieToTile(this);
     }
 
-    public void takeDamage(int amount, DamageType damageType, MatchState state) {
-        super.takeDamage(amount, damageType);
-        int maxHitpoints = data != null ? data.getHitpoints() : 3000;
+    @Override
+    public void takeDamage(int amount, DamageType type) {
+        super.takeDamage(amount, type);
+        int maxHitpoints = data != null ? data.getHitpoints() : 3600;
         if (hasThrowingImp && currentHealth > 0 && currentHealth <= maxHitpoints / 2) {
+            pendingImpThrow = true;
+        }
+    }
+
+    @Override
+    public void onTick(MatchState state) {
+        if (pendingImpThrow) {
+            pendingImpThrow = false;
             throwImp(state);
         }
     }
@@ -43,10 +53,14 @@ public class GargantuarZombie extends Zombie {
             return;
         }
         hasThrowingImp = false;
-        BasicZombie imp = new BasicZombie();
-        imp.setCurrentHealth(270);
-        state.getMap().addZombie(imp, (int) y, 2);
-        System.out.println("The Gargantuar threw its Imp to column 3 of row " + (int) y + "!");
+        Zombie imp = utils.ZombieFactory.createZombie("Imp", state.getDifficultyLevel());
+        if (imp == null) {
+            imp = new BasicZombie();
+            imp.setCurrentHealth(270);
+        }
+        int column = Math.min(2, state.getMap().getColumns() - 1);
+        state.getMap().addZombie(imp, (int) y, column);
+        System.out.println("The Gargantuar threw its Imp to column " + (column + 1) + " of row " + ((int) y + 1) + "!");
     }
 
     public boolean hasThrowingImp() { return hasThrowingImp; }

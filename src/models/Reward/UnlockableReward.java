@@ -1,5 +1,7 @@
 package models.Reward;
 
+import models.User;
+
 public class UnlockableReward implements Reward {
     private String currentType;
     private String targetName;
@@ -16,9 +18,17 @@ public class UnlockableReward implements Reward {
     public void setTargetName(String targetName) { this.targetName = targetName; }
 
     @Override
-    public void addReward() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addReward'");
+    public void addReward(User user) {
+        if ("plant".equalsIgnoreCase(currentType)) {
+            user.unlockPlant(targetName);
+        } else if ("boost".equalsIgnoreCase(currentType)) {
+            user.addBoostFor(targetName);
+        } else if ("level".equalsIgnoreCase(currentType)) {
+            try {
+                int level = Integer.parseInt(targetName);
+                user.setHighestLevel(Math.max(user.getHighestLevel(), level));
+            } catch (NumberFormatException ignored) {
+            }
+        }
     }
-    
 }

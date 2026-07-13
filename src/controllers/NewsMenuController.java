@@ -27,7 +27,8 @@ public class NewsMenuController {
         StringBuilder sb = new StringBuilder("All news:\n");
         Set<Integer> read = readFor(userApp.getLoggedInUser());
         for (int i = 0; i < NEWS.size(); i++) {
-            sb.append(i + 1).append(". ").append(read.contains(i) ? "[read] " : "[new] ").append(NEWS.get(i)).append("\n");
+            sb.append(i + 1).append(". ").append(read.contains(i) ? "[read] " : "[new] ")
+                    .append(NEWS.get(i)).append("\n");
         }
         return new Result(sb.toString().trim(), true);
     }

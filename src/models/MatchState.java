@@ -6,7 +6,7 @@ import java.util.List;
 
 public class MatchState {
     private User user;
-    private Map map;
+    private Map map; // Note: Ensure this refers to your custom models.Map, not java.util.Map!
     private List<SeedPacket> seedPackets;
 
     private List<Wave> waves;
@@ -27,6 +27,8 @@ public class MatchState {
     private int lostPlantsCount;
     private boolean isPlayingAsZombie;
     private int targetMatchCount;
+    private models.Enums.ChapterType chapterType;
+    private int killedZombiesCount;
 
 
     public MatchState(User user, int initialSun, int difficultyLevel) {
@@ -137,5 +139,11 @@ public class MatchState {
 
     public int getTargetMatchCount() { return targetMatchCount; }
     public void setTargetMatchCount(int targetMatchCount) { this.targetMatchCount = targetMatchCount; }
+
+    public models.Enums.ChapterType getChapterType() { return chapterType; }
+    public void setChapterType(models.Enums.ChapterType chapterType) { this.chapterType = chapterType; }
+
+    public int getKilledZombiesCount() { return killedZombiesCount; }
+    public void incrementKilledZombiesCount() { this.killedZombiesCount++; }
     
 }

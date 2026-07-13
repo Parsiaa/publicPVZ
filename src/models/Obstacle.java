@@ -27,7 +27,8 @@ public class Obstacle extends Entity {
             System.out.println("The grave dropped 50 sun!");
         } else if (type == ObstacleType.GRAVE_FOOD) {
             state.addPlantFood();
-            System.out.println("The grave dropped a plant food; you have " + state.getPlantFoods() + " plant foods now.");
+            System.out.println("The grave dropped a plant food; you have "
+                    + state.getPlantFoods() + " plant foods now.");
         }
     }
 

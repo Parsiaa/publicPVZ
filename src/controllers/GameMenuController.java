@@ -1,17 +1,34 @@
 package controllers;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import models.MatchState;
+import models.SeedPacket;
+import models.Enums.ChapterType;
 import models.Enums.Menu;
 import models.User;
+import utils.PlantFactory;
 import utils.Result;
 import utils.UserApp;
 
 public class GameMenuController {
     private UserApp userApp;
     private MenuRouter router;
+    private GameEngine gameEngine;
+    private SettingsMenuController settingsController;
 
     public GameMenuController(UserApp userApp, MenuRouter router) {
         this.userApp = userApp;
         this.router = router;
+    }
+
+    public void setGameEngine(GameEngine gameEngine) {
+        this.gameEngine = gameEngine;
+    }
+
+    public void setSettingsController(SettingsMenuController settingsController) {
+        this.settingsController = settingsController;
     }
 
     public Result handleEnterChapter(String chapterName) {
@@ -19,15 +36,68 @@ public class GameMenuController {
         if (user == null) {
             return new Result("Error: You must be logged in first.", false);
         }
-        int chapterIndex = chapterIndexOf(chapterName);
-        if (chapterIndex == -1) {
+        ChapterType chapter = LevelFactory.chapterTypeOf(chapterName);
+        if (chapter == null) {
             return new Result("Error: Chapter '" + chapterName + "' doesn't exist.", false);
         }
-        if (chapterIndex > user.getHighestChapter() + 1) {
+        if (LevelFactory.chapterIndex(chapter) > user.getHighestChapter() + 1) {
             return new Result("Error: Chapter '" + chapterName + "' is not unlocked yet.", false);
         }
+        int completed = user.getCompletedLevels(chapter.name());
+        int level = Math.min(completed + 1, LevelFactory.PLAYABLE_LEVELS_PER_CHAPTER);
+        String note = completed >= LevelFactory.PLAYABLE_LEVELS_PER_CHAPTER
+                ? " (chapter finished - replaying level 3; the boss level arrives in the next phase)" : "";
+        LevelConfig config = LevelFactory.createAdventureLevel(chapter, level,
+                new ArrayList<>(user.getUnlockedPlants()), new Random());
+        if (gameEngine == null) {
+            router.navigateTo(Menu.PlantSelectionMenu);
+            return new Result("Entering chapter " + chapterName + " level " + level + ".", true);
+        }
+        gameEngine.setPendingLevel(config);
+        if (config.isConveyor()) {
+            gameEngine.setScoreMode(false);
+            MatchState state = new MatchState(user, config.getInitialSun(), difficulty());
+            state.initializeFromUser(user);
+            gameEngine.startMatch(state);
+            return new Result("Chapter " + chapterName + " level " + level
+                    + " started - plants arrive on the conveyor belt!" + note, true);
+        }
         router.navigateTo(Menu.PlantSelectionMenu);
-        return new Result("Entering chapter " + chapterName + ". Select your plants!", true);
+        return new Result("Entering chapter " + chapterName + " level " + level
+                + ". Select your plants!" + note, true);
+    }
+
+    public Result handleStartScoreGame() {
+        User user = userApp.getLoggedInUser();
+        if (user == null) {
+            return new Result("Error: You must be logged in first.", false);
+        }
+        if (gameEngine == null) {
+            return new Result("Error: The game engine is not available.", false);
+        }
+        List<SeedPacket> packets = new ArrayList<>();
+        for (String name : user.getUnlockedPlants()) {
+            if (packets.size() >= 8) {
+                break;
+            }
+            SeedPacket packet = PlantFactory.createSeedPacket(name);
+            if (packet != null) {
+                packets.add(packet);
+            }
+        }
+        gameEngine.setPendingLevel(null);
+        gameEngine.setScoreMode(true);
+        MatchState state = new MatchState(user, 150, difficulty());
+        state.setSeedPackets(packets);
+        state.initializeFromUser(user);
+        gameEngine.startMatch(state);
+        router.navigateTo(Menu.GameMenu);
+        return new Result("Score run started! Today's zombie waves are the same for every player."
+                + " Earn MewPoints with fast, multi and combo kills.", true);
+    }
+
+    private int difficulty() {
+        return settingsController != null ? settingsController.getDifficultyLevel() : 3;
     }
 
     public Result handleEnterCollection() {
@@ -89,23 +159,16 @@ public class GameMenuController {
         if (currencyType.equalsIgnoreCase("coin")) {
             user.setCoins(user.getCoins() + amount);
             userApp.saveUsers();
-            return new Result("Cheat activated: +" + amount + " coins. You now have " + user.getCoins() + " coins.", true);
+            return new Result("Cheat activated: +" + amount + " coins. You now have "
+                    + user.getCoins() + " coins.", true);
         }
         if (currencyType.equalsIgnoreCase("diamond")) {
             user.setGems(user.getGems() + amount);
             userApp.saveUsers();
-            return new Result("Cheat activated: +" + amount + " diamonds. You now have " + user.getGems() + " diamonds.", true);
+            return new Result("Cheat activated: +" + amount + " diamonds. You now have "
+                    + user.getGems() + " diamonds.", true);
         }
         return new Result("Error: Currency must be 'coin' or 'diamond'.", false);
     }
 
-    private int chapterIndexOf(String chapterName) {
-        switch (chapterName.toLowerCase().replace("-", "").replace("_", "").replace(" ", "")) {
-            case "egypt": return 1;
-            case "frostbite": return 2;
-            case "beach": return 3;
-            case "darkages": return 4;
-            default: return -1;
-        }
-    }
 }

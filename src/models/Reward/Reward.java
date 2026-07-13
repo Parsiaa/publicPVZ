@@ -1,5 +1,7 @@
 package models.Reward;
 
+import models.User;
+
 public interface Reward {
-    void addReward();
+    void addReward(User user);
 }

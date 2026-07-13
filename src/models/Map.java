@@ -141,13 +141,36 @@ public class Map {
     public Zombie getFirstZombieAhead(int row, double x) {
         Zombie first = null;
         for (Zombie zombie : getZombiesInRow(row)) {
-            if (zombie.getX() >= x && zombie.getCurrentHealth() > 0) {
+            if (zombie.getX() >= x && zombie.getCurrentHealth() > 0 && !zombie.isHypnotized()) {
                 if (first == null || zombie.getX() < first.getX()) {
                     first = zombie;
                 }
             }
         }
         return first;
+    }
+
+    /** Nearest live enemy zombie behind the given x in a row (used by Split Pea / Starfruit). */
+    public Zombie getFirstZombieBehind(int row, double x) {
+        Zombie nearest = null;
+        for (Zombie zombie : getZombiesInRow(row)) {
+            if (zombie.getX() < x && zombie.getCurrentHealth() > 0 && !zombie.isHypnotized()) {
+                if (nearest == null || zombie.getX() > nearest.getX()) {
+                    nearest = zombie;
+                }
+            }
+        }
+        return nearest;
+    }
+
+    /** Whether a plant marked as a pea-igniter (Torchwood) sits between the shooter and the target. */
+    public boolean hasIgniterBetween(int row, double fromX, double toX) {
+        for (Plant plant : getPlantsInRow(row)) {
+            if (!plant.isDead() && plant.ignitesPeas() && plant.getX() > fromX && plant.getX() <= toX) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Plant getFrontPlantForZombie(int row, double zombieX) {
@@ -169,6 +192,23 @@ public class Map {
         Tile tile = getTile(row, col);
         if (tile != null) {
             tile.addEntity(zombie);
+        }
+    }
+
+    /** First grave tile strictly between fromX and toX in this row (blocks straight shots). */
+    public Tile getBlockingTileAhead(int row, double fromX, double toX) {
+        for (int c = (int) Math.floor(fromX) + 1; c < columns && c <= toX; c++) {
+            Tile tile = getTile(row, c);
+            if (tile != null && tile.blocksProjectiles()) {
+                return tile;
+            }
+        }
+        return null;
+    }
+
+    public void disableLawnMowers() {
+        for (int r = 0; r < rows; r++) {
+            lawnMowers[r] = false;
         }
     }
 

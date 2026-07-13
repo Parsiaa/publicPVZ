@@ -2,6 +2,7 @@ package models;
 
 import java.util.ArrayList;
 import java.util.List;
+import models.Enums.ObstacleType;
 import models.Enums.TileType;
 
 public class Tile {
@@ -12,6 +13,7 @@ public class Tile {
     private List<Zombie> zombies;
     private int tileHealth;
     private boolean hasCrater;
+    private ObstacleType graveLoot;
 
     public Tile(int row, int column, TileType type) {
         this.row = row;
@@ -29,9 +31,10 @@ public class Tile {
         }
     }
 
-    public void takeTileDamage(int amount) {
+    /** Damages a grave or ice tile; returns true if it was destroyed by this hit. */
+    public boolean takeTileDamage(int amount) {
         if (type != TileType.GRAVE && type != TileType.ICE) {
-            return;
+            return false;
         }
         tileHealth = Math.max(0, tileHealth - amount);
         if (tileHealth == 0) {
@@ -40,7 +43,9 @@ public class Tile {
             } else {
                 this.type = TileType.NORMAL;
             }
+            return true;
         }
+        return false;
     }
 
     public void meltIce() {
@@ -102,4 +107,7 @@ public class Tile {
 
     public boolean hasCrater() { return hasCrater; }
     public void setHasCrater(boolean hasCrater) { this.hasCrater = hasCrater; }
+
+    public ObstacleType getGraveLoot() { return graveLoot; }
+    public void setGraveLoot(ObstacleType graveLoot) { this.graveLoot = graveLoot; }
 }

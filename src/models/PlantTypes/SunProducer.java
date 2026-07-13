@@ -6,6 +6,10 @@ import models.Plant;
 public class SunProducer extends Plant {
     protected int ticksSinceAction;
     protected boolean hasPendingSun;
+    protected int pendingSunAmount;
+    /** Sun released per production cycle; overridden per plant (Sunflower 50, Twin 100, ...). */
+    protected int sunPerCycle = 50;
+    protected int plantFoodSun = 150;
 
     @Override
     public void act(MatchState state) {
@@ -16,25 +20,33 @@ public class SunProducer extends Plant {
         int intervalTicks = (int) Math.max(1, actionInterval * 10);
         if (ticksSinceAction >= intervalTicks) {
             ticksSinceAction = 0;
-            hasPendingSun = true;
-            state.setUncollectedSuns(state.getUncollectedSuns() + 25);
-            System.out.println("plant " + name + " produced a sun at (" + (int) x + ", " + (int) y + ")");
+            produce(state, sunPerCycle);
         }
     }
 
-    public boolean collectSun(MatchState state) {
+    protected void produce(MatchState state, int amount) {
+        hasPendingSun = true;
+        pendingSunAmount = amount;
+        state.setUncollectedSuns(state.getUncollectedSuns() + amount);
+        System.out.println("plant " + name + " produced a sun at (" + (int) x + ", " + (int) y + ")");
+    }
+
+    /** Collects the pending sun; returns the collected amount (0 if none was ready). */
+    public int collectSun(MatchState state) {
         if (!hasPendingSun) {
-            return false;
+            return 0;
         }
         hasPendingSun = false;
-        state.setUncollectedSuns(Math.max(0, state.getUncollectedSuns() - 25));
-        state.addSun(25);
-        return true;
+        int amount = pendingSunAmount;
+        state.setUncollectedSuns(Math.max(0, state.getUncollectedSuns() - amount));
+        state.addSun(amount);
+        pendingSunAmount = 0;
+        return amount;
     }
 
     @Override
     public void triggerPlantFood(MatchState state) {
-        state.addSun(150);
+        state.addSun(plantFoodSun);
     }
 
     public boolean hasPendingSun() { return hasPendingSun; }

@@ -5,6 +5,7 @@ import models.Plant;
 import models.Projectile;
 import models.Zombie;
 
+/** Targets the frontmost zombie anywhere on the board and locks on automatically. */
 public class Homing extends Plant {
     protected int ticksSinceAction;
 
@@ -23,6 +24,11 @@ public class Homing extends Plant {
             return;
         }
         ticksSinceAction = 0;
+        onHit(state, target);
+    }
+
+    /** What happens to a locked-on target; by default a homing projectile. */
+    protected void onHit(MatchState state, Zombie target) {
         Projectile projectile = new Projectile(baseDamage, 1, 1, tags);
         projectile.hitTarget(target);
     }
@@ -39,10 +45,10 @@ public class Homing extends Plant {
         }
     }
 
-    private Zombie findTarget(MatchState state) {
+    protected Zombie findTarget(MatchState state) {
         Zombie best = null;
         for (Zombie zombie : state.getMap().getAllZombies()) {
-            if (zombie.getCurrentHealth() > 0) {
+            if (zombie.getCurrentHealth() > 0 && !zombie.isHypnotized()) {
                 if (best == null || zombie.getX() < best.getX()) {
                     best = zombie;
                 }

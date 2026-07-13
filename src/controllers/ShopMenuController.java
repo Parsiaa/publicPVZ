@@ -1,251 +1,219 @@
 package controllers;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import models.User;
+import utils.PlantFactory;
 import utils.Result;
 import utils.UserApp;
 
+/**
+ * The shop, reachable from the greenhouse. Sells permanent items plus a daily
+ * offer that refreshes at 00:00 (system clock) and can be bought once per day.
+ */
 public class ShopMenuController {
+
+    private static final int POT_PRICE_COINS = 2000;
+    private static final int PLANT_FOOD_PRICE_GEMS = 3;
+    private static final int MAX_STORED_PLANT_FOODS = 3;
+    private static final int RANDOM_SEED_PACK_PRICE_COINS = 1000;
+    private static final int RANDOM_SEED_PACK_AMOUNT = 5;
+    private static final int CHOSEN_SEED_PACK_PRICE_GEMS = 5;
+    private static final int CHOSEN_SEED_PACK_AMOUNT = 10;
+    private static final int EXCHANGE_PRICE_GEMS = 5;
+    private static final int EXCHANGE_COINS_GIVEN = 500;
+    private static final int DAILY_OFFER_PRICE_COINS = 1600;
+    private static final int DAILY_OFFER_AMOUNT = 10;
+
     private UserApp userApp;
     private GreenhouseMenuController greenhouseController;
     private CollectionMenuController collectionController;
-
-    private Map<String, java.util.Map<String, Integer>> seedPacketsByUser;
-    private Map<String, LocalDate> dailyPurchasedByUser;
+    private final Random random;
     private LocalDate dailyOfferDate;
-
-    private static final int ITEM_POT = 1;
-    private static final int ITEM_PLANT_FOOD = 2;
-    private static final int ITEM_RANDOM_PACKET = 3;
-    private static final int ITEM_CHOSEN_PACKET = 4;
-    private static final int ITEM_CURRENCY_CONVERSION = 5;
-    private static final int ITEM_DAILY_OFFER = 6;
-
-    private static final int POT_COST_COINS = 2000;
-    private static final int PLANT_FOOD_COST_GEMS = 3;
-    private static final int MAX_PLANT_FOOD = 3;
-    private static final int RANDOM_PACKET_COST_COINS = 1000;
-    private static final int RANDOM_PACKET_AMOUNT = 5;
-    private static final int CHOSEN_PACKET_COST_GEMS = 10;
-    private static final int CHOSEN_PACKET_AMOUNT = 5;
-    private static final int CONVERSION_COST_GEMS = 5;
-    private static final int CONVERSION_GAIN_COINS = 500;
-    private static final int DAILY_OFFER_COST_COINS = 1600;
-    private static final int DAILY_OFFER_AMOUNT = 10;
+    private String dailyOfferPlant;
+    private Map<String, LocalDate> dailyPurchaseByUser;
 
     public ShopMenuController(UserApp userApp, GreenhouseMenuController greenhouseController,
-                             CollectionMenuController collectionController) {
+                              CollectionMenuController collectionController) {
         this.userApp = userApp;
         this.greenhouseController = greenhouseController;
         this.collectionController = collectionController;
-        this.seedPacketsByUser = new HashMap<>();
-        this.dailyPurchasedByUser = new HashMap<>();
-        refreshDailyOffer();
+        this.random = new Random();
+        this.dailyPurchaseByUser = new HashMap<>();
     }
 
     public Result handleShopList() {
-        StringBuilder sb = new StringBuilder("Permanent shop items:\n");
-        sb.append(ITEM_POT).append(". Pot | ").append(POT_COST_COINS)
-                .append(" coins | unlocks one greenhouse pot (max 20)\n");
-        sb.append(ITEM_PLANT_FOOD).append(". Plant Food | ").append(PLANT_FOOD_COST_GEMS)
-                .append(" gems | starting plant food for a level (max ").append(MAX_PLANT_FOOD).append(" stored)\n");
-        sb.append(ITEM_RANDOM_PACKET).append(". Random Seed Packet | ").append(RANDOM_PACKET_COST_COINS)
-                .append(" coins | ").append(RANDOM_PACKET_AMOUNT).append(" packets for a random unlocked plant\n");
-        sb.append(ITEM_CHOSEN_PACKET).append(". Chosen Seed Packet | ").append(CHOSEN_PACKET_COST_GEMS)
-                .append(" gems | ").append(CHOSEN_PACKET_AMOUNT).append(" packets for a chosen unlocked plant (-t required)\n");
-        sb.append(ITEM_CURRENCY_CONVERSION).append(". Currency Conversion | ").append(CONVERSION_COST_GEMS)
-                .append(" gems -> ").append(CONVERSION_GAIN_COINS).append(" coins\n");
-        return new Result(sb.toString().trim(), true);
+        return new Result("Permanent shop items:\n"
+                + "1. Pot | " + POT_PRICE_COINS + " coins | unlocks one greenhouse slot (max 20)\n"
+                + "2. Plant Food | " + PLANT_FOOD_PRICE_GEMS + " gems | start levels with one extra plant food"
+                + " (max " + MAX_STORED_PLANT_FOODS + " stored)\n"
+                + "3. Random Seed Pack | " + RANDOM_SEED_PACK_PRICE_COINS + " coins | "
+                + RANDOM_SEED_PACK_AMOUNT + " seed packets of a random unlocked plant\n"
+                + "4. Chosen Seed Pack | " + CHOSEN_SEED_PACK_PRICE_GEMS + " gems | "
+                + CHOSEN_SEED_PACK_AMOUNT + " seed packets of an unlocked plant of your choice (-t required)\n"
+                + "5. Currency Exchange | " + EXCHANGE_PRICE_GEMS + " gems | "
+                + EXCHANGE_COINS_GIVEN + " coins", true);
     }
 
     public Result handleShopDaily() {
         refreshDailyOffer();
         User user = userApp.getLoggedInUser();
-        String plant = dailyOfferPlant(user);
-        StringBuilder sb = new StringBuilder("Daily offer (" + dailyOfferDate + "):\n");
-        sb.append(ITEM_DAILY_OFFER).append(". Special Seed Packet");
-        if (plant != null) {
-            sb.append(" for ").append(plant);
-        }
-        sb.append(" | ").append(DAILY_OFFER_COST_COINS).append(" coins (20% off) | ")
-                .append(DAILY_OFFER_AMOUNT).append(" packets");
-        if (alreadyBoughtDaily(user)) {
-            sb.append("\n(Already purchased today.)");
-        }
-        return new Result(sb.toString(), true);
+        String status = hasBoughtToday(user) ? " [already purchased today]" : "";
+        return new Result("Daily offer (" + dailyOfferDate + "):\n"
+                + "6. Special Seed Pack: " + DAILY_OFFER_AMOUNT + "x " + dailyOfferPlant
+                + " | 2000 coins -20% -> " + DAILY_OFFER_PRICE_COINS + " coins" + status, true);
     }
 
-    public Result handleBuyItem(int itemId, int count, String plantType) {
-        User user = userApp.getLoggedInUser();
-        if (user == null) {
-            return new Result("Error: You must be logged in first.", false);
-        }
+    public Result handleShopBuy(int itemId, int count, String plantType) {
         if (count < 1) {
             return new Result("Error: Count must be at least 1.", false);
         }
         switch (itemId) {
-            case ITEM_POT:
-                return buyPots(user, count);
-            case ITEM_PLANT_FOOD:
-                return buyPlantFood(user, count);
-            case ITEM_RANDOM_PACKET:
-                return buyRandomPackets(user, count);
-            case ITEM_CHOSEN_PACKET:
-                return buyChosenPackets(user, count, plantType);
-            case ITEM_CURRENCY_CONVERSION:
-                return convertCurrency(user, count);
-            case ITEM_DAILY_OFFER:
-                return buyDailyOffer(user, count);
-            default:
-                return new Result("Error: Item id '" + itemId + "' doesn't exist.", false);
+            case 1: return buyPots(count);
+            case 2: return buyPlantFood(count);
+            case 3: return buyRandomSeedPack(count);
+            case 4: return buyChosenSeedPack(count, plantType);
+            case 5: return buyCurrencyExchange(count);
+            case 6: return buyDailyOffer(count);
+            default: return new Result("Error: Item " + itemId + " doesn't exist.", false);
         }
     }
 
-    private Result buyPots(User user, int count) {
-        int available = greenhouseController.lockedPotCount(user);
-        if (available == 0) {
-            return new Result("Error: All greenhouse pots are already unlocked.", false);
+    private Result buyPots(int count) {
+        User user = userApp.getLoggedInUser();
+        if (greenhouseController.lockedPotCount(user) < count) {
+            return new Result("Error: Only " + greenhouseController.lockedPotCount(user)
+                    + " locked pot(s) remain.", false);
         }
-        if (count > available) {
-            return new Result("Error: Only " + available + " locked pot(s) remain.", false);
+        Result payment = pay(user, POT_PRICE_COINS * count, 0);
+        if (payment != null) {
+            return payment;
         }
-        int total = POT_COST_COINS * count;
-        if (user.getCoins() < total) {
-            return new Result("Error: Not enough coins. Total cost: " + total + " coins.", false);
-        }
-        user.setCoins(user.getCoins() - total);
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < count; i++) {
-            greenhouseController.unlockNextPot(user);
+            sb.append(greenhouseController.unlockNextPot(user).getMessage()).append("\n");
         }
         userApp.saveUsers();
-        return new Result("Unlocked " + count + " greenhouse pot(s) for " + total + " coins.", true);
+        return new Result(sb.toString().trim(), true);
     }
 
-    private Result buyPlantFood(User user, int count) {
-        if (user.getStoredStartingPlantFoods() + count > MAX_PLANT_FOOD) {
-            return new Result("Error: You can store at most " + MAX_PLANT_FOOD
-                    + " plant food (you have " + user.getStoredStartingPlantFoods() + ").", false);
+    private Result buyPlantFood(int count) {
+        User user = userApp.getLoggedInUser();
+        int stored = user.getStoredStartingPlantFoods();
+        if (stored + count > MAX_STORED_PLANT_FOODS) {
+            return new Result("Error: You can store at most " + MAX_STORED_PLANT_FOODS
+                    + " plant foods (you have " + stored + ").", false);
         }
-        int total = PLANT_FOOD_COST_GEMS * count;
-        if (user.getGems() < total) {
-            return new Result("Error: Not enough gems. Total cost: " + total + " gems.", false);
+        Result payment = pay(user, 0, PLANT_FOOD_PRICE_GEMS * count);
+        if (payment != null) {
+            return payment;
         }
-        user.setGems(user.getGems() - total);
-        user.setStoredStartingPlantFoods(user.getStoredStartingPlantFoods() + count);
+        user.setStoredStartingPlantFoods(stored + count);
         userApp.saveUsers();
-        return new Result("Bought " + count + " plant food for " + total + " gems.", true);
+        return new Result("Bought " + count + " plant food(s). Stored: "
+                + user.getStoredStartingPlantFoods(), true);
     }
 
-    private Result buyRandomPackets(User user, int count) {
+    private Result buyRandomSeedPack(int count) {
+        User user = userApp.getLoggedInUser();
         List<String> unlocked = collectionController.getUnlockedPlants(user);
         if (unlocked.isEmpty()) {
-            return new Result("Error: You have no unlocked plants to receive packets for.", false);
+            return new Result("Error: You have no unlocked plants.", false);
         }
-        int total = RANDOM_PACKET_COST_COINS * count;
-        if (user.getCoins() < total) {
-            return new Result("Error: Not enough coins. Total cost: " + total + " coins.", false);
+        Result payment = pay(user, RANDOM_SEED_PACK_PRICE_COINS * count, 0);
+        if (payment != null) {
+            return payment;
         }
-        user.setCoins(user.getCoins() - total);
-        Random random = new Random();
-        StringBuilder detail = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < count; i++) {
             String plant = unlocked.get(random.nextInt(unlocked.size()));
-            addPackets(user, plant, RANDOM_PACKET_AMOUNT);
-            if (detail.length() > 0) {
-                detail.append(", ");
-            }
-            detail.append(RANDOM_PACKET_AMOUNT).append("x ").append(plant);
+            user.addSeedPackets(plant, RANDOM_SEED_PACK_AMOUNT);
+            sb.append("Received ").append(RANDOM_SEED_PACK_AMOUNT).append(" seed packets of ")
+                    .append(plant).append(".\n");
         }
         userApp.saveUsers();
-        return new Result("Bought random seed packets for " + total + " coins: " + detail + ".", true);
+        return new Result(sb.toString().trim(), true);
     }
 
-    private Result buyChosenPackets(User user, int count, String plantType) {
-        if (plantType == null || plantType.trim().isEmpty()) {
-            return new Result("Error: A plant type (-t) is required for chosen seed packets.", false);
+    private Result buyChosenSeedPack(int count, String plantType) {
+        User user = userApp.getLoggedInUser();
+        if (plantType == null || plantType.isEmpty()) {
+            return new Result("Error: Chosen seed packs need a plant type (-t <plant>).", false);
         }
-        if (!collectionController.isPlantUnlocked(plantType)) {
-            return new Result("Error: '" + plantType + "' is not unlocked (or doesn't exist).", false);
+        String properName = PlantFactory.properName(plantType);
+        if (properName == null || !collectionController.isPlantUnlocked(properName)) {
+            return new Result("Error: You can only buy seed packets of unlocked plants.", false);
         }
-        int total = CHOSEN_PACKET_COST_GEMS * count;
-        if (user.getGems() < total) {
-            return new Result("Error: Not enough gems. Total cost: " + total + " gems.", false);
+        Result payment = pay(user, 0, CHOSEN_SEED_PACK_PRICE_GEMS * count);
+        if (payment != null) {
+            return payment;
         }
-        user.setGems(user.getGems() - total);
-        addPackets(user, plantType, CHOSEN_PACKET_AMOUNT * count);
+        user.addSeedPackets(properName, CHOSEN_SEED_PACK_AMOUNT * count);
         userApp.saveUsers();
-        return new Result("Bought " + (CHOSEN_PACKET_AMOUNT * count) + " seed packet(s) for "
-                + plantType + " for " + total + " gems.", true);
+        return new Result("Received " + (CHOSEN_SEED_PACK_AMOUNT * count) + " seed packets of "
+                + properName + ".", true);
     }
 
-    private Result convertCurrency(User user, int count) {
-        int totalGems = CONVERSION_COST_GEMS * count;
-        if (user.getGems() < totalGems) {
-            return new Result("Error: Not enough gems. Total cost: " + totalGems + " gems.", false);
+    private Result buyCurrencyExchange(int count) {
+        User user = userApp.getLoggedInUser();
+        Result payment = pay(user, 0, EXCHANGE_PRICE_GEMS * count);
+        if (payment != null) {
+            return payment;
         }
-        int gainedCoins = CONVERSION_GAIN_COINS * count;
-        user.setGems(user.getGems() - totalGems);
-        user.setCoins(user.getCoins() + gainedCoins);
+        user.setCoins(user.getCoins() + EXCHANGE_COINS_GIVEN * count);
         userApp.saveUsers();
-        return new Result("Converted " + totalGems + " gems into " + gainedCoins + " coins.", true);
+        return new Result("Exchanged " + (EXCHANGE_PRICE_GEMS * count) + " gems for "
+                + (EXCHANGE_COINS_GIVEN * count) + " coins. Coins: " + user.getCoins(), true);
     }
 
-    private Result buyDailyOffer(User user, int count) {
+    private Result buyDailyOffer(int count) {
+        refreshDailyOffer();
+        User user = userApp.getLoggedInUser();
         if (count != 1) {
             return new Result("Error: The daily offer can only be bought once per day.", false);
         }
-        refreshDailyOffer();
-        if (alreadyBoughtDaily(user)) {
-            return new Result("Error: You already bought today's daily offer.", false);
+        if (hasBoughtToday(user)) {
+            return new Result("Error: You already bought today's offer.", false);
         }
-        String plant = dailyOfferPlant(user);
-        if (plant == null) {
-            return new Result("Error: You have no unlocked plants for the daily offer.", false);
+        Result payment = pay(user, DAILY_OFFER_PRICE_COINS, 0);
+        if (payment != null) {
+            return payment;
         }
-        if (user.getCoins() < DAILY_OFFER_COST_COINS) {
-            return new Result("Error: Not enough coins. The daily offer costs "
-                    + DAILY_OFFER_COST_COINS + " coins.", false);
-        }
-        user.setCoins(user.getCoins() - DAILY_OFFER_COST_COINS);
-        addPackets(user, plant, DAILY_OFFER_AMOUNT);
-        dailyPurchasedByUser.put(user.getUsername(), dailyOfferDate);
+        user.addSeedPackets(dailyOfferPlant, DAILY_OFFER_AMOUNT);
+        dailyPurchaseByUser.put(user.getUsername(), dailyOfferDate);
         userApp.saveUsers();
-        return new Result("Bought the daily offer: " + DAILY_OFFER_AMOUNT + " seed packets for "
-                + plant + " (" + DAILY_OFFER_COST_COINS + " coins).", true);
+        return new Result("Bought the daily offer: " + DAILY_OFFER_AMOUNT + " seed packets of "
+                + dailyOfferPlant + ".", true);
     }
 
-    public int getSeedPacketCount(User user, String plantName) {
-        java.util.Map<String, Integer> inventory = seedPacketsByUser.get(user.getUsername());
-        if (inventory == null) {
-            return 0;
+    /** Charges the user; returns an error Result if they cannot afford it, or null on success. */
+    private Result pay(User user, int coins, int gems) {
+        if (user.getCoins() < coins) {
+            return new Result("Error: Not enough coins. This costs " + coins + " coins.", false);
         }
-        return inventory.getOrDefault(plantName, 0);
-    }
-
-    private void addPackets(User user, String plant, int amount) {
-        seedPacketsByUser
-                .computeIfAbsent(user.getUsername(), k -> new HashMap<>())
-                .merge(plant, amount, Integer::sum);
+        if (user.getGems() < gems) {
+            return new Result("Error: Not enough gems. This costs " + gems + " gems.", false);
+        }
+        user.setCoins(user.getCoins() - coins);
+        user.setGems(user.getGems() - gems);
+        return null;
     }
 
     private void refreshDailyOffer() {
         LocalDate today = LocalDate.now();
-        if (dailyOfferDate == null || !dailyOfferDate.equals(today)) {
-            dailyOfferDate = today;
+        if (today.equals(dailyOfferDate) && dailyOfferPlant != null) {
+            return;
         }
+        dailyOfferDate = today;
+        List<String> unlocked = collectionController.getUnlockedPlants(userApp.getLoggedInUser());
+        List<String> pool = unlocked.isEmpty() ? PlantFactory.getAllPlantNames() : unlocked;
+        dailyOfferPlant = pool.get(new Random(today.toEpochDay()).nextInt(pool.size()));
     }
 
-    private boolean alreadyBoughtDaily(User user) {
-        return dailyOfferDate.equals(dailyPurchasedByUser.get(user.getUsername()));
-    }
-
-    private String dailyOfferPlant(User user) {
-        List<String> unlocked = collectionController.getUnlockedPlants(user);
-        if (unlocked.isEmpty()) {
-            return null;
-        }
-        int index = (int) Math.floorMod(dailyOfferDate.toEpochDay(), unlocked.size());
-        return unlocked.get(index);
+    private boolean hasBoughtToday(User user) {
+        return dailyOfferDate != null && dailyOfferDate.equals(dailyPurchaseByUser.get(user.getUsername()));
     }
 }

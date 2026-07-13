@@ -14,72 +14,6 @@ public class Quest {
     private int currentProgress;
     private int targetProgress;
 
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public QuestPriority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(QuestPriority priority) {
-        this.priority = priority;
-    }
-
-    public QuestCategory getCategory() {
-        return category;
-    }
-
-    public void setCategory(QuestCategory category) {
-        this.category = category;
-    }
-
-    public Reward getReward() {
-        return reward;
-    }
-
-    public void setReward(Reward reward) {
-        this.reward = reward;
-    }
-
-    public String getConditionType() {
-        return conditionType;
-    }
-
-    public void setConditionType(String conditionType) {
-        this.conditionType = conditionType;
-    }
-
-    public int getCurrentProgress() {
-        return currentProgress;
-    }
-
-    public void setCurrentProgress(int currentProgress) {
-        this.currentProgress = currentProgress;
-    }
-
-    public int getTargetProgress() {
-        return targetProgress;
-    }
-
-    public void setTargetProgress(int targetProgress) {
-        this.targetProgress = targetProgress;
-    }
-
-
     public Quest(String id, String title, QuestPriority priority, QuestCategory category,
                  Reward reward, String conditionType, int currentProgress, int targetProgress) {
         this.id = id;
@@ -92,20 +26,49 @@ public class Quest {
         this.targetProgress = targetProgress;
     }
 
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public QuestPriority getPriority() { return priority; }
+    public void setPriority(QuestPriority priority) { this.priority = priority; }
+
+    public QuestCategory getCategory() { return category; }
+    public void setCategory(QuestCategory category) { this.category = category; }
+
+    public Reward getReward() { return reward; }
+    public void setReward(Reward reward) { this.reward = reward; }
+
+    public String getConditionType() { return conditionType; }
+    public void setConditionType(String conditionType) { this.conditionType = conditionType; }
+
+    public int getCurrentProgress() { return currentProgress; }
+    public void setCurrentProgress(int currentProgress) { this.currentProgress = currentProgress; }
+
+    public int getTargetProgress() { return targetProgress; }
+    public void setTargetProgress(int targetProgress) { this.targetProgress = targetProgress; }
 
     public void updateProgress(int progress) {
-        //TODO
+        this.currentProgress = Math.min(targetProgress, currentProgress + progress);
     }
 
     public boolean checkCompletion() {
-        //TODO
-        return false;
+        return currentProgress >= targetProgress;
     }
 
     public void claimReward(User user) {
-        //TODO
+        if (!checkCompletion()) {
+            return;
+        }
+        if (category == QuestCategory.DAILY) {
+            user.setDailyQuestsCompleted(user.getDailyQuestsCompleted() + 1);
+        } else {
+            user.setNotDailyQuestsCompleted(user.getNotDailyQuestsCompleted() + 1);
+        }
+        if (reward != null) {
+            reward.addReward(user);
+        }
     }
-
-
 }

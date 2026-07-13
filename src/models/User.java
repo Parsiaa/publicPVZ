@@ -30,6 +30,11 @@ public class User {
     private boolean stayLoggedIn;
     private List<Quest> activeQuests;
     private Set<String> boostedPlants = new HashSet<>();
+    private Set<String> unlockedPlants = new HashSet<>(java.util.Arrays.asList("Sunflower", "Peashooter", "Wall-nut"));
+    private java.util.Map<String, Integer> seedPacketInventory = new java.util.HashMap<>();
+    private java.util.Map<String, Integer> plantLevels = new java.util.HashMap<>();
+    private java.util.Map<String, Integer> completedLevelsByChapter = new java.util.HashMap<>();
+    private Pot[][] greenhousePots;
 
 
     public User(String username, String password, String passwordHash, String passwordConfirm,
@@ -97,7 +102,9 @@ public class User {
     public void setSecurityAnswer(String securityAnswer) { this.securityAnswer = securityAnswer; }
 
     public int getStoredStartingPlantFoods() { return storedStartingPlantFoods; }
-    public void setStoredStartingPlantFoods(int storedStartingPlantFoods) { this.storedStartingPlantFoods = storedStartingPlantFoods; }
+    public void setStoredStartingPlantFoods(int storedStartingPlantFoods) {
+        this.storedStartingPlantFoods = storedStartingPlantFoods;
+    }
 
     public int getHighestChapter() { return highestChapter; }
     public void setHighestChapter(int highestChapter) { this.highestChapter = highestChapter; }
@@ -112,10 +119,14 @@ public class User {
     public void setDailyQuestsCompleted(int dailyQuestsCompleted) { this.dailyQuestsCompleted = dailyQuestsCompleted; }
 
     public int getNotDailyQuestsCompleted() { return notDailyQuestsCompleted; }
-    public void setNotDailyQuestsCompleted(int notDailyQuestsCompleted) { this.notDailyQuestsCompleted = notDailyQuestsCompleted; }
+    public void setNotDailyQuestsCompleted(int notDailyQuestsCompleted) {
+        this.notDailyQuestsCompleted = notDailyQuestsCompleted;
+    }
 
     public int getHighestMeowPointScore() { return highestMeowPointScore; }
-    public void setHighestMeowPointScore(int highestMeowPointScore) { this.highestMeowPointScore = highestMeowPointScore; }
+    public void setHighestMeowPointScore(int highestMeowPointScore) {
+        this.highestMeowPointScore = highestMeowPointScore;
+    }
 
     public boolean getStayLoggedIn() { return stayLoggedIn; }
     public void setStayLoggedIn(boolean stayLoggedIn) { this.stayLoggedIn = stayLoggedIn; }
@@ -131,11 +142,6 @@ public class User {
         if (!username.matches("^[a-zA-Z0-9-]+$")) {
             errors.add("Username contains invalid characters. Only letters, numbers, and '-' are allowed.");
         }
-        // If necessary uncomment these three lines.
-        // if (username.length() < 3) {
-        //     errors.add("Username must be at least 3 characters long.");
-        // }
-
         return new Result(String.join("\n", errors), errors.isEmpty());
     }
 
@@ -207,7 +213,8 @@ public class User {
             errors.add("Email username part cannot be empty.");
         } else {
             if (!localPart.matches("^[a-zA-Z0-9._-]+$")) {
-                errors.add("Email username can only contain English letters, numbers, dots (.), hyphens (-), and underscores (_).");
+                errors.add("Email username can only contain English letters, numbers,"
+                        + " dots (.), hyphens (-), and underscores (_).");
             }
             if (!localPart.matches("^[a-zA-Z0-9].*[a-zA-Z0-9]$") && !localPart.matches("^[a-zA-Z0-9]$")) {
                 errors.add("Email username must start and end with a letter or number.");
@@ -243,6 +250,80 @@ public class User {
 
         return new Result(String.join("\n", errors), errors.isEmpty());
     }
+
+    public Set<String> getBoostedPlants() { return boostedPlants; }
+    public void setBoostedPlants(Set<String> boostedPlants) { this.boostedPlants = boostedPlants; }
+
+    public java.util.Map<String, Integer> getSeedPacketInventory() { return seedPacketInventory; }
+    public void setSeedPacketInventory(java.util.Map<String, Integer> seedPacketInventory) {
+        this.seedPacketInventory = seedPacketInventory;
+    }
+
+    public int getSeedPacketCount(String plantName) {
+        return seedPacketInventory.getOrDefault(plantName, 0);
+    }
+
+    public void addSeedPackets(String plantName, int amount) {
+        seedPacketInventory.merge(plantName, amount, Integer::sum);
+    }
+
+    public boolean consumeSeedPackets(String plantName, int amount) {
+        int have = getSeedPacketCount(plantName);
+        if (have < amount) {
+            return false;
+        }
+        seedPacketInventory.put(plantName, have - amount);
+        return true;
+    }
+
+    public Set<String> getUnlockedPlants() {
+        return unlockedPlants;
+    }
+    public void setUnlockedPlants(Set<String> unlockedPlants) {
+        this.unlockedPlants = unlockedPlants;
+    }
+    public boolean hasUnlocked(String plantName) {
+        return unlockedPlants.contains(plantName);
+    }
+    public void unlockPlant(String plantName) {
+        unlockedPlants.add(plantName);
+    }
+    public java.util.Map<String, Integer> getPlantLevels() { return plantLevels; }
+    public void setPlantLevels(java.util.Map<String, Integer> plantLevels) { this.plantLevels = plantLevels; }
+    public int getPlantLevel(String plantName) {
+        return plantLevels.getOrDefault(plantName, 1);
+    }
+    public void setPlantLevel(String plantName, int level) {
+        plantLevels.put(plantName, level);
+    }
+
+    public java.util.Map<String, Integer> getCompletedLevelsByChapter() { return completedLevelsByChapter; }
+    public void setCompletedLevelsByChapter(java.util.Map<String, Integer> completedLevelsByChapter) {
+        this.completedLevelsByChapter = completedLevelsByChapter;
+    }
+    public int getCompletedLevels(String chapterName) {
+        return completedLevelsByChapter.getOrDefault(chapterName, 0);
+    }
+    public void setCompletedLevels(String chapterName, int levels) {
+        completedLevelsByChapter.put(chapterName, levels);
+    }
+
+    /** The 4x5 greenhouse pot grid; the first row starts unlocked. */
+    public Pot[][] getGreenhousePots() {
+        if (greenhousePots == null) {
+            greenhousePots = new Pot[4][5];
+            for (int y = 0; y < 4; y++) {
+                for (int x = 0; x < 5; x++) {
+                    greenhousePots[y][x] = new Pot();
+                    if (y == 0) {
+                        greenhousePots[y][x].setUnlocked(true);
+                    }
+                }
+            }
+        }
+        return greenhousePots;
+    }
+    public void setGreenhousePots(Pot[][] greenhousePots) { this.greenhousePots = greenhousePots; }
 
     public boolean hasBoostFor(String plantName) {
         return boostedPlants.contains(plantName);

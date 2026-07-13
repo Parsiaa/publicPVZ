@@ -2,16 +2,54 @@ package controllers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import models.MatchState;
 import models.Quest;
 import models.User;
+import models.Enums.Menu;
 import utils.Result;
 import utils.UserApp;
 
 public class TravelLogController {
     private UserApp userApp;
+    private GameEngine gameEngine;
+    private MenuRouter router;
 
     public TravelLogController(UserApp userApp) {
         this.userApp = userApp;
+    }
+
+    public void setGameEngine(GameEngine gameEngine) {
+        this.gameEngine = gameEngine;
+    }
+
+    public void setRouter(MenuRouter router) {
+        this.router = router;
+    }
+
+    public Result handlePlayMiniGame(String name, int stage) {
+        User user = userApp.getLoggedInUser();
+        if (user == null) {
+            return new Result("Error: You must be logged in first.", false);
+        }
+        if (gameEngine == null || router == null) {
+            return new Result("Error: The game engine is not available.", false);
+        }
+        if (stage < 1 || stage > 3) {
+            return new Result("Error: Stage must be between 1 and 3.", false);
+        }
+        LevelConfig config = LevelFactory.createMiniGame(name, stage, new Random());
+        if (config == null) {
+            return new Result("Error: Unknown mini-game '" + name
+                    + "'. Available: vasebreaker, bowling, izombie.", false);
+        }
+        gameEngine.setScoreMode(false);
+        gameEngine.setPendingLevel(config);
+        MatchState state = new MatchState(user, config.getInitialSun(), 3);
+        state.initializeFromUser(user);
+        gameEngine.startMatch(state);
+        router.navigateTo(Menu.GameMenu);
+        return new Result("Mini-game '" + name + "' stage " + stage + " started!", true);
     }
 
     public Result handleTravelLog(String filter) {
@@ -48,7 +86,8 @@ public class TravelLogController {
                 if (quest.checkCompletion()) {
                     return new Result("Quest '" + quest.getTitle() + "' completed! Claim your reward.", true);
                 }
-                return new Result("Progress updated: " + quest.getCurrentProgress() + "/" + quest.getTargetProgress() + ".", true);
+                return new Result("Progress updated: " + quest.getCurrentProgress()
+                        + "/" + quest.getTargetProgress() + ".", true);
             }
         }
         return new Result("Error: Quest '" + questId + "' not found.", false);

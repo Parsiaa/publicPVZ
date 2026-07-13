@@ -11,8 +11,6 @@ public class UserApp {
     private User loggedInUser;
     private static Menu currentMenu;
 
-    private static final String USERS_FILE_PATH = "data/users.json";
-
     public UserApp() {
         this.users = new HashMap<>();
         this.loggedInUser = null;
@@ -53,32 +51,21 @@ public class UserApp {
     }
 
     public void loadUsers() {
-        // TODO: Read from USERS_FILE_PATH using Gson or Jackson.
-        // Example with Gson:
-        /*
-        try (Reader reader = new FileReader(USERS_FILE_PATH)) {
-            Type type = new TypeToken<HashMap<String, User>>(){}.getType();
-            this.users = new Gson().fromJson(reader, type);
-            if (this.users == null) {
-                this.users = new HashMap<>(); // Fallback if file is empty
-            }
-        } catch (IOException e) {
-            System.out.println("No previous save file found. Starting fresh.");
-            this.users = new HashMap<>();
-        }
-        */
+        this.users = new HashMap<>(SaveManager.load());
     }
+
     public void saveUsers() {
-        // TODO: Write this.users to USERS_FILE_PATH using Gson or Jackson.
-        // Example with Gson:
-        /*
-        try (Writer writer = new FileWriter(USERS_FILE_PATH)) {
-            new Gson().toJson(this.users, writer);
-        } catch (IOException e) {
-            System.out.println("Error saving users!");
-            e.printStackTrace();
+        SaveManager.save(this.users);
+    }
+
+    /** Returns the user that closed the app while "stay logged in" was on, if any. */
+    public User findStayLoggedInUser() {
+        for (User user : users.values()) {
+            if (user.getStayLoggedIn()) {
+                return user;
+            }
         }
-        */
+        return null;
     }
     public void addUser(User newUser) {
         users.put(newUser.getUsername(), newUser);

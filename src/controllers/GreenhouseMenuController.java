@@ -11,7 +11,6 @@ public class GreenhouseMenuController {
     private UserApp userApp;
     private MenuRouter router;
     private CollectionMenuController collectionController;
-    private Map<String, Pot[][]> potsByUser;
 
     private static final int ROWS = 4;
     private static final int COLUMNS = 5;
@@ -22,7 +21,6 @@ public class GreenhouseMenuController {
         this.userApp = userApp;
         this.router = router;
         this.collectionController = collectionController;
-        this.potsByUser = new HashMap<>();
     }
 
     public Result handleShowGreenhouse() {
@@ -169,23 +167,11 @@ public class GreenhouseMenuController {
     }
 
     private Pot[][] potsFor(User user) {
-        return potsByUser.computeIfAbsent(user.getUsername(), k -> {
-            Pot[][] pots = new Pot[ROWS][COLUMNS];
-            for (int y = 0; y < ROWS; y++) {
-                for (int x = 0; x < COLUMNS; x++) {
-                    Pot pot = new Pot();
-
-                    if (y == 0) {
-                        pot.setUnlocked(true);
-                    }
-                    pots[y][x] = pot;
-                }
-            }
-            return pots;
-        });
+        return user.getGreenhousePots();
     }
 
     private String formatHours(double hours) {
         return String.format("%.1f", Math.max(0, hours));
     }
 }
+

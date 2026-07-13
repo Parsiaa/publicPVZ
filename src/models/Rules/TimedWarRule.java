@@ -3,44 +3,49 @@ package models.Rules;
 import models.LevelRule;
 import models.MatchState;
 
+/**
+ * Timed War level: kill the target number of zombies before the timer ends.
+ */
 public class TimedWarRule implements LevelRule {
-    private double timeRemaining;
-    private int requiredKills;
-    private int currentKills;
 
-    public TimedWarRule(double timeRemaining, int requiredKills, int currentKills) {
-        this.timeRemaining = timeRemaining;
-        this.requiredKills = requiredKills;
-        this.currentKills = currentKills;
+    private final int durationSeconds;
+    private final int targetKills;
+
+    public TimedWarRule(int durationSeconds, int targetKills) {
+        this.durationSeconds = durationSeconds;
+        this.targetKills = targetKills;
     }
-    public double getTimeRemaining() {
-        return timeRemaining;
+
+    public int getDurationSeconds() {
+        return durationSeconds;
     }
-    public void setTimeRemaining(double timeRemaining) {
-        this.timeRemaining = timeRemaining;
+
+    public int getTargetKills() {
+        return targetKills;
     }
-    public int getRequiredKills() {
-        return requiredKills;
-    }
-    public void setRequiredKills(int requiredKills) {
-        this.requiredKills = requiredKills;
-    }
-    public int getCurrentKills() {
-        return currentKills;
-    }
-    public void setCurrentKills(int currentKills) {
-        this.currentKills = currentKills;
-    }
-    public boolean checkWinCondition() { return false; }
+
     @Override
-    public boolean checkWinCondition(MatchState state) { return false; }
-    
-    public boolean checkLossCondition() { return false; }
+    public boolean checkWinCondition(MatchState state) {
+        return state.getKilledZombiesCount() >= targetKills;
+    }
+
     @Override
-    public boolean checkLossCondition(MatchState state) { return false; }
-    
+    public boolean checkLossCondition(MatchState state) {
+        return state.getCurrentTick() / 10.0 >= durationSeconds
+                && state.getKilledZombiesCount() < targetKills;
+    }
+
     @Override
-    public String getRuleInfo() { return null; }
+    public void onTick(MatchState state) {
+        if (state.getCurrentTick() % 100 == 0) {
+            int remaining = durationSeconds - state.getCurrentTick() / 10;
+            System.out.println("Timed War: " + state.getKilledZombiesCount() + "/" + targetKills
+                    + " zombies killed, " + remaining + "s left.");
+        }
+    }
+
     @Override
-    public void onTick(MatchState state) {}
+    public String getRuleInfo() {
+        return "Timed War level: kill " + targetKills + " zombies within " + durationSeconds + " seconds.";
+    }
 }

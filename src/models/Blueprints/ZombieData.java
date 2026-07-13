@@ -12,6 +12,16 @@ public class ZombieData {
     private List<String> armorAliases;
     private Map<String, Object> specialProps;
 
+    public ZombieData(String alias, String objClass, int hitpoints, double speed, int eatDps,
+                      List<String> armorAliases, Map<String, Object> specialProps) {
+        this.alias = alias;
+        this.objClass = objClass;
+        this.hitpoints = hitpoints;
+        this.speed = speed;
+        this.eatDps = eatDps;
+        this.armorAliases = armorAliases;
+        this.specialProps = specialProps;
+    }
 
     public String getAlias() {
         return alias;
@@ -38,6 +48,6 @@ public class ZombieData {
     }
 
     public Object getSpecialProps(String key) {
-        return specialProps.get(key);
+        return specialProps != null ? specialProps.get(key) : null;
     }
 }

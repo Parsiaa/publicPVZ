@@ -55,6 +55,16 @@ public class Pot {
         }
     }
 
+    /** Restores a pot from saved data. */
+    public void loadState(boolean unlocked, boolean empty, String plantName,
+                          LocalDateTime time, boolean marigold) {
+        this.isUnlocked = unlocked;
+        this.isEmpty = empty;
+        this.plantedPlantName = plantName;
+        this.plantTime = time;
+        this.isMarigold = marigold;
+    }
+
     public void clearPot() {
         this.isEmpty = true;
         this.plantedPlantName = null;

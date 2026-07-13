@@ -15,6 +15,11 @@ public class Armor {
         return data != null && data.hasFlag("magnetic");
     }
 
+    /** Metal armour (bucket, crown, ...) that a Magnet-shroom can pull off. */
+    public boolean isMetallic() {
+        return data != null && data.hasFlag("metallic");
+    }
+
     public boolean isBroken() {
         return currentHealth <= 0;
     }
